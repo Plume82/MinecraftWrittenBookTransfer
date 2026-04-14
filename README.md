@@ -1,2 +1,2 @@
 # MinecraftWrittenBookTransfer
-实现Minecraft中成书从.txt到游戏中的灵活转换与管理
+实现Minecraft中成书在.txt与游戏中的灵活双向转换与管理
