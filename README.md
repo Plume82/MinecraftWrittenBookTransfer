@@ -136,6 +136,6 @@ A: 目前仅支持 Minecraft 的 .mcfunction 格式的书面书籍文件。
 --------
 
 当前版本：WrittenBookTransfer v1.0
-最后更新：2024年
+最后更新：2026年4月
 
 感谢您使用 WrittenBookTransfer！
