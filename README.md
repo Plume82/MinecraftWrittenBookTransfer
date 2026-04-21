@@ -6,6 +6,8 @@ WrittenBookTransfer
 
 WrittenBookTransfer 是一款专为 Minecraft 玩家设计的成书数据库管理系统。该软件主要用于管理和组织 Minecraft 中的书面书籍（.mcfunction 文件），提供便捷的文件管理、搜索、翻译和AI分析功能，帮助玩家更好地整理和利用游戏中的书籍资源。
 
+首先，请确保您已有 JAVA 25，运行src/main/java/WrittenBookTransferGUI.java就可打开初始化界面。
+
 软件功能
 --------
 
