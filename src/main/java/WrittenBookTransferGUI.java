@@ -9,6 +9,8 @@ import com.functionlib.FunctionlibApp;
 import com.functionlib.TranslateLib;
 import com.functionlib.db.BookDao;
 import com.functionlib.db.DatabaseManager;
+import com.writtenbooktransfer.BookTransferService;
+import com.writtenbooktransfer.MinecraftBookPreviewDialog;
 import com.common.McFunctionParser;
 import com.functionlib.FunctionlibApp.BookEntry;
 
@@ -43,6 +45,9 @@ import javax.swing.event.ListSelectionEvent;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+
+import com.writtenbooktransfer.BookTransferService;
+import com.writtenbooktransfer.MinecraftBookPreviewDialog;
 
 /**
  * WrittenBookTransfer 系统 Swing 图形界面入口
@@ -1835,6 +1840,11 @@ private FunctionlibApp.BookEntry selectKeeperForEntry(List<FunctionlibApp.BookEn
         JButton aiTranslateButton = new JButton("🤖 AI翻译");
         JButton translateButton = new JButton("🌐 翻译");
         JButton aiScoreButton = new JButton("📊 AI评分");
+        JButton importToMcButton = new JButton("📥 导入至 Minecraft");
+        importToMcButton.addActionListener(e -> {
+            importBookToMinecraft(book, content);
+        });
+        buttonPanel.add(importToMcButton);
 
         // AI 翻译按钮事件
         aiTranslateButton.addActionListener(new ActionListener() {
@@ -1957,73 +1967,151 @@ private FunctionlibApp.BookEntry selectKeeperForEntry(List<FunctionlibApp.BookEn
         }).start();
     }
 
+   private void importBookToMinecraft(BookEntry book, String fullContent) {
+    // 1. 直接从文件提取纯净页面（避免详情页的页码装饰符）
+    List<String> pages;
+    try {
+        pages = McFunctionParser.extractPagesFromFile(book.getFile().toPath());
+    } catch (IOException e) {
+        e.printStackTrace();
+        pages = new ArrayList<>();
+    }
+    if (pages.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "书籍内容为空，无法导入", "错误", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+    String plainText = String.join("\n", pages);
+
+    BookTransferService service = new BookTransferService();
+    service.setPagesFromContent(plainText);
+
+    // 2. 显示预览对话框
+    MinecraftBookPreviewDialog previewDialog = new MinecraftBookPreviewDialog(this, service.getPages(), book.getTitle());
+    previewDialog.setDefaultFormatAction(() -> {
+        service.applyDefaultFormattingToCurrent();
+        previewDialog.refreshPages(service.getPages());
+        JOptionPane.showMessageDialog(previewDialog, "已应用默认段落编排", "完成", JOptionPane.INFORMATION_MESSAGE);
+    });
+    previewDialog.setVisible(true);
+
+    if (!previewDialog.isConfirmed()) {
+        return; // 用户取消，详情对话框保持打开
+    }
+
+    // 3. 用户确认传输，先显示提示，再启动后台传输线程
+    JOptionPane.showMessageDialog(this,
+            "<html><b>即将开始传输</b><br>"
+            + "1. 请切换到 Minecraft 游戏窗口<br>"
+            + "2. 打开一本书，将鼠标悬停在翻页按钮上<br>"
+            + "3. 按下 <b>Ctrl</b> 键开始自动输入<br>"
+            + "4. 随时可按 <b>ESC</b> 中止传输</html>",
+            "传输提示", JOptionPane.INFORMATION_MESSAGE);
+
+    // 4. 关闭详情对话框（此时用户已确认，可以关闭）
+    if (currentPreviewDialog != null) {
+        currentPreviewDialog.dispose();
+        currentPreviewDialog = null;
+    }
+
+    // 5. 启动后台传输线程（内部会阻塞等待 Ctrl）
+    new Thread(() -> {
+        service.startTransfer(new BookTransferService.TransferCallback() {
+            @Override
+            public void onStatus(String message) {
+                SwingUtilities.invokeLater(() -> {
+                    statusLabel.setText(message);
+                    logArea.append(message + "\n");
+                });
+            }
+
+            @Override
+            public void onPageStart(int current, int total, String content) {
+                SwingUtilities.invokeLater(() -> logArea.append(content + "\n"));
+            }
+
+            @Override
+            public void onPageComplete(int current) {
+                SwingUtilities.invokeLater(() -> statusLabel.setText("已完成第 " + current + " 页"));
+            }
+
+            @Override
+            public void onError(String error) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(WrittenBookTransferGUI.this, error, "传输错误", JOptionPane.ERROR_MESSAGE));
+            }
+
+            @Override
+            public void onFinished() {
+                SwingUtilities.invokeLater(() -> statusLabel.setText("传输结束"));
+            }
+        });
+    }).start();
+}
     /**
  * 从全部书籍列表中筛选出直接位于根目录下的书籍
  */
-
-
-    private void performSearch() {
-        String keywordText = searchField.getText().trim();
-        if (keywordText.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "请输入搜索关键词", "提示", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        if (rootDatabaseFolder == null) {
-            JOptionPane.showMessageDialog(this, "请先打开数据库文件夹！", "提示", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        final String mode = (String) searchModeCombo.getSelectedItem();
-        final boolean fullTextSearch = "全文检索".equals(mode);
-        final String[] keywords = keywordText.split("\\s+");
-        final List<BookEntry> allBooks = FunctionlibApp.getAllBooks();
-        final List<SearchResult> results = new ArrayList<SearchResult>();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (BookEntry book : allBooks) {
-                    boolean titleMatch = matchesKeywords(book.getTitle(), keywords);
-                    boolean authorMatch = matchesKeywords(book.getAuthor(), keywords);
-
-                    if (titleMatch || authorMatch) {
-                        StringBuilder matchedFields = new StringBuilder();
-                        if (titleMatch) matchedFields.append("书名 ");
-                        if (authorMatch) matchedFields.append("作者 ");
-                        String snippet = fullTextSearch ? "" : "— 仅匹配元数据 —";
-                        results.add(new SearchResult(book, matchedFields.toString().trim(), snippet));
-                        continue;
-                    }
-
-                    if (fullTextSearch) {
-                        try {
-                            String fullText = Files.readString(book.getFile().toPath(), StandardCharsets.UTF_8);
-                            if (matchesKeywords(fullText, keywords)) {
-                                String snippet = generateSnippet(fullText, keywords, 100);
-                                results.add(new SearchResult(book, "内容", snippet));
-                            }
-                        } catch (Exception ignored) {
-                        }
-                    }
-                }
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        showSearchResults(keywordText, results);
-                    }
-                });
-            }
-        }).start();
+private void performSearch() {
+    String keywordText = searchField.getText().trim();
+    if (keywordText.isEmpty()) {
+        JOptionPane.showMessageDialog(this, "请输入搜索关键词", "提示", JOptionPane.INFORMATION_MESSAGE);
+        return;
     }
+    if (rootDatabaseFolder == null) {
+        JOptionPane.showMessageDialog(this, "请先打开数据库文件夹！", "提示", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+
+    final String mode = (String) searchModeCombo.getSelectedItem();
+    final boolean fullTextSearch = "全文检索".equals(mode);
+    final String[] keywords = keywordText.split("\\s+");
+
+    // 从当前主表格模型中获取所有显示的书籍（这就是实际加载的数据）
+    List<BookEntry> sourceBooks = new ArrayList<>();
+    for (int i = 0; i < mainTableModel.getRowCount(); i++) {
+        sourceBooks.add(mainTableModel.getBookAt(i));
+    }
+
+    // 如果当前右侧子目录打开且正在显示，也可以搜索右侧表格，或者统一搜索整个数据库
+    // 为了简单，这里只搜索主表格的书籍（根目录直属文件），如需搜索全库请替换数据源
+    final List<BookEntry> allBooks = sourceBooks;
+    final List<SearchResult> results = new ArrayList<>();
+
+    new Thread(() -> {
+        for (BookEntry book : allBooks) {
+            boolean titleMatch = matchesKeywords(book.getTitle(), keywords);
+            boolean authorMatch = matchesKeywords(book.getAuthor(), keywords);
+
+            if (titleMatch || authorMatch) {
+                StringBuilder matchedFields = new StringBuilder();
+                if (titleMatch) matchedFields.append("书名 ");
+                if (authorMatch) matchedFields.append("作者 ");
+                String snippet = fullTextSearch ? "" : "— 仅匹配元数据 —";
+                results.add(new SearchResult(book, matchedFields.toString().trim(), snippet));
+                continue;
+            }
+
+            if (fullTextSearch) {
+                try {
+                    String fullText = Files.readString(book.getFile().toPath(), StandardCharsets.UTF_8);
+                    if (matchesKeywords(fullText, keywords)) {
+                        String snippet = generateSnippet(fullText, keywords, 100);
+                        results.add(new SearchResult(book, "内容", snippet));
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        SwingUtilities.invokeLater(() -> showSearchResults(keywordText, results));
+    }).start();
+}
 
     private boolean matchesKeywords(String text, String[] keywords) {
-        if (text == null) return false;
-        String lowerText = text.toLowerCase();
-        for (String kw : keywords) {
-            if (!lowerText.contains(kw.toLowerCase())) return false;
-        }
-        return true;
+    if (text == null) return false;
+    String lowerText = text.toLowerCase();
+    for (String kw : keywords) {
+        if (lowerText.contains(kw.toLowerCase())) return true;
     }
+    return false;
+}
 
 /**
  * 递归收集所有需要更新数据库的文件夹（排除 .recycle_bin 及其子文件夹）
