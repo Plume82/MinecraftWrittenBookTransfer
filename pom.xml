@@ -72,6 +72,10 @@
                 <configuration>
                     <release>25</release>    <!-- 🆕 使用 release 替代 source/target -->
                     <encoding>UTF-8</encoding>
+                    <!-- ✅ 排除 legacy 目录，防止其中的旧命令行代码参与编译 -->
+                    <excludes>
+                        <exclude>legacy/**/*.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
 

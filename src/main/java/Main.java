@@ -1,4 +1,4 @@
-import com.writtenbooktransfer.TransferApp;
+
 import com.booktypesetting.TypesettingApp;
 import com.bookextractor.BookExtractorApp;
 import com.bookexport.BookExportApp;
@@ -54,7 +54,7 @@ public class Main {
             switch (choice) {
                 case 1:
                     System.out.println("\n正在启动传输模块...\n");
-                    TransferApp.main(new String[0]);
+
                     break;
                 case 2:
                     System.out.println("\n正在启动排版模块...\n");

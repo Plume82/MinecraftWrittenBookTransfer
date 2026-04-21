@@ -8,14 +8,12 @@ import com.functionlib.Editlib;
 import com.functionlib.FunctionlibApp;
 import com.functionlib.TranslateLib;
 import com.functionlib.db.BookDao;
-import com.functionlib.db.DatabaseManager;
+
 import com.writtenbooktransfer.BookTransferService;
+import com.writtenbooktransfer.GlobalKeyListener;
 import com.writtenbooktransfer.MinecraftBookPreviewDialog;
 import com.common.McFunctionParser;
 import com.functionlib.FunctionlibApp.BookEntry;
-
-import java.sql.Connection;
-import java.sql.SQLException;
 
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
@@ -44,10 +42,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.event.ListSelectionEvent;
 
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-
-import com.writtenbooktransfer.BookTransferService;
-import com.writtenbooktransfer.MinecraftBookPreviewDialog;
 
 /**
  * WrittenBookTransfer 系统 Swing 图形界面入口
@@ -111,6 +105,8 @@ public class WrittenBookTransferGUI extends JFrame {
         mainBookTable = new JTable(mainTableModel);
         subTableModel = new BookTableModel();
         subBookTable = new JTable(subTableModel);
+
+        GlobalKeyListener.initGlobalHook();
 
         initComponents();
         initBookTables();
@@ -1987,33 +1983,28 @@ private FunctionlibApp.BookEntry selectKeeperForEntry(List<FunctionlibApp.BookEn
 
     // 2. 显示预览对话框
     MinecraftBookPreviewDialog previewDialog = new MinecraftBookPreviewDialog(this, service.getPages(), book.getTitle());
-    previewDialog.setDefaultFormatAction(() -> {
-        service.applyDefaultFormattingToCurrent();
-        previewDialog.refreshPages(service.getPages());
-        JOptionPane.showMessageDialog(previewDialog, "已应用默认段落编排", "完成", JOptionPane.INFORMATION_MESSAGE);
-    });
-    previewDialog.setVisible(true);
+previewDialog.setDefaultFormatAction(() -> {
+    List<String> newPages = service.interactiveReformat(previewDialog);
+    if (newPages != null) {
+        previewDialog.refreshPages(newPages);
+        JOptionPane.showMessageDialog(previewDialog,
+                "智能排版完成，共 " + newPages.size() + " 页。",
+                "完成", JOptionPane.INFORMATION_MESSAGE);
+    }
+});
+previewDialog.setVisible(true);
 
     if (!previewDialog.isConfirmed()) {
         return; // 用户取消，详情对话框保持打开
     }
 
-    // 3. 用户确认传输，先显示提示，再启动后台传输线程
-    JOptionPane.showMessageDialog(this,
-            "<html><b>即将开始传输</b><br>"
-            + "1. 请切换到 Minecraft 游戏窗口<br>"
-            + "2. 打开一本书，将鼠标悬停在翻页按钮上<br>"
-            + "3. 按下 <b>Ctrl</b> 键开始自动输入<br>"
-            + "4. 随时可按 <b>ESC</b> 中止传输</html>",
-            "传输提示", JOptionPane.INFORMATION_MESSAGE);
-
-    // 4. 关闭详情对话框（此时用户已确认，可以关闭）
+    // 3. 关闭详情对话框（用户已确认传输）
     if (currentPreviewDialog != null) {
         currentPreviewDialog.dispose();
         currentPreviewDialog = null;
     }
 
-    // 5. 启动后台传输线程（内部会阻塞等待 Ctrl）
+    // 4. 启动后台传输线程（内部会输出提示并阻塞等待 Ctrl）
     new Thread(() -> {
         service.startTransfer(new BookTransferService.TransferCallback() {
             @Override

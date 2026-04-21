@@ -69,8 +69,8 @@ public class MinecraftBookPreviewDialog extends JDialog {
         navPanel.add(nextButton);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-        defaultFormatButton = new JButton("默认排版");
-        defaultFormatButton.setToolTipText("应用段落间空一行、首尾不空行的默认格式");
+        defaultFormatButton = new JButton("智能排版");
+        defaultFormatButton.setToolTipText("重新分析全文，智能识别章节并询问分页");
         JButton confirmButton = new JButton("确认传输");
         JButton cancelButton = new JButton("取消");
 
