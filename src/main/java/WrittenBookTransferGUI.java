@@ -94,7 +94,25 @@ public class WrittenBookTransferGUI extends JFrame {
     private JPanel leftTreePanel;
     private DefaultMutableTreeNode rightClickedNode = null;
 
+    private JScrollPane subScroll;   // 右侧子目录表格的滚动面板，用于动态更新标题
+
     public WrittenBookTransferGUI() {
+
+        // 设置全局默认字体大小
+        Font defaultFont = new Font("宋体", Font.PLAIN, 12);
+        UIManager.put("Label.font", defaultFont);
+        UIManager.put("Button.font", defaultFont);
+        UIManager.put("TextField.font", defaultFont);
+        UIManager.put("TextArea.font", defaultFont);
+        UIManager.put("Table.font", defaultFont);
+        UIManager.put("TableHeader.font", defaultFont);
+        UIManager.put("Tree.font", defaultFont);
+        UIManager.put("Menu.font", defaultFont);
+        UIManager.put("MenuItem.font", defaultFont);
+        UIManager.put("ComboBox.font", defaultFont);
+        UIManager.put("TabbedPane.font", defaultFont);
+        UIManager.put("TitledBorder.font", defaultFont);
+
         super("WrittenBookTransfer - 成书数据库管理系统");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1300, 850);
@@ -643,46 +661,58 @@ private List<BookEntry> filterRootOnlyBooks(List<BookEntry> allBooks) {
         folderPopupMenu.add(deleteItem);
 
         folderTree.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) { handleMouseEvent(e); }
-            @Override
-            public void mouseReleased(MouseEvent e) { handleMouseEvent(e); }
+    @Override
+    public void mousePressed(MouseEvent e) {
+        if (e.isPopupTrigger()) {
+            handlePopup(e);
+        }
+    }
 
-            private void handleMouseEvent(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    int row = folderTree.getRowForLocation(e.getX(), e.getY());
-                    if (row != -1) {
-                        folderTree.setSelectionRow(row);
-                        TreePath path = folderTree.getPathForRow(row);
-                        Object node = path.getLastPathComponent();
-                        if (node instanceof DefaultMutableTreeNode) {
-                            rightClickedNode = (DefaultMutableTreeNode) node;
-                            Object userObj = rightClickedNode.getUserObject();
-                            boolean isRealFolder = (userObj instanceof File) && ((File) userObj).isDirectory();
-                            newFolderItem.setEnabled(isRealFolder || "未打开数据库".equals(userObj));
-                            renameItem.setEnabled(isRealFolder);
-                            deleteItem.setEnabled(isRealFolder);
-                            folderPopupMenu.show(folderTree, e.getX(), e.getY());
-                        }
-                    }
-                } else if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
-                    TreePath path = folderTree.getPathForLocation(e.getX(), e.getY());
-                    if (path != null) {
-                        Object node = path.getLastPathComponent();
-                        if (node instanceof DefaultMutableTreeNode) {
-                            DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) node;
-                            Object userObj = treeNode.getUserObject();
-                            if (userObj instanceof File) {
-                                File dir = (File) userObj;
-                                if (dir.isDirectory()) {
-                                    loadSubFolder(dir);
-                                }
-                            }
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        if (e.isPopupTrigger()) {
+            handlePopup(e);
+        }
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        if (e.getClickCount() == 2 && SwingUtilities.isLeftMouseButton(e)) {
+            TreePath path = folderTree.getPathForLocation(e.getX(), e.getY());
+            if (path != null) {
+                Object node = path.getLastPathComponent();
+                if (node instanceof DefaultMutableTreeNode) {
+                    DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) node;
+                    Object userObj = treeNode.getUserObject();
+                    if (userObj instanceof File) {
+                        File dir = (File) userObj;
+                        if (dir.isDirectory()) {
+                            loadSubFolder(dir);
                         }
                     }
                 }
             }
-        });
+        }
+    }
+
+    private void handlePopup(MouseEvent e) {
+        int row = folderTree.getRowForLocation(e.getX(), e.getY());
+        if (row != -1) {
+            folderTree.setSelectionRow(row);
+            TreePath path = folderTree.getPathForRow(row);
+            Object node = path.getLastPathComponent();
+            if (node instanceof DefaultMutableTreeNode) {
+                rightClickedNode = (DefaultMutableTreeNode) node;
+                Object userObj = rightClickedNode.getUserObject();
+                boolean isRealFolder = (userObj instanceof File) && ((File) userObj).isDirectory();
+                newFolderItem.setEnabled(isRealFolder || "未打开数据库".equals(userObj));
+                renameItem.setEnabled(isRealFolder);
+                deleteItem.setEnabled(isRealFolder);
+                folderPopupMenu.show(folderTree, e.getX(), e.getY());
+            }
+        }
+    }
+});
 
         JScrollPane treeScroll = new JScrollPane(folderTree);
         leftTreePanel.add(treeScroll, BorderLayout.CENTER);
@@ -691,7 +721,6 @@ private List<BookEntry> filterRootOnlyBooks(List<BookEntry> allBooks) {
     // WrittenBookTransferGUI.java
 
 private void buildFolderTree(File rootFolder) {
-    System.out.println("buildFolderTree called for: " + rootFolder);
     DefaultMutableTreeNode newRoot = new DefaultMutableTreeNode(rootFolder);
     addSubfolders(newRoot, rootFolder);
     treeModel.setRoot(newRoot);
@@ -706,7 +735,6 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
             if (!file.isDirectory()) return false;
             String name = file.getName();
             if (".recycle_bin".equals(name) || ".dbbook".equals(name)) {
-                System.out.println("[addSubfolders] 过滤目录: " + file.getAbsolutePath());
                 return false;
             }
             return true;
@@ -740,6 +768,8 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
                         @Override
                         public void run() {
                             subTableModel.setBooks(finalBooks);
+                            subScroll.setBorder(BorderFactory.createTitledBorder(folder.getName()));
+                            statusLabel.setText("子目录: " + folder.getName() + "，共 " + finalBooks.size() + " 本书");
                         }
                     });
                 } catch (SQLException e) {
@@ -836,7 +866,7 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
         toolBar.setLayout(new BorderLayout());
 
         JPanel leftButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
-        JButton openFolderButton = new JButton("📂 打开文件夹");
+        JButton openFolderButton = new JButton("打开文件夹");
         openFolderButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -845,7 +875,7 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
         });
         leftButtonPanel.add(openFolderButton);
 
-        JButton aiFilterButton = new JButton("🤖 AI 价值过滤");
+        JButton aiFilterButton = new JButton("AI 价值过滤");
         aiFilterButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -854,7 +884,7 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
         });
         leftButtonPanel.add(aiFilterButton);
 
-        JButton recycleButton = new JButton("🗑️ 回收站");
+        JButton recycleButton = new JButton("回收站");
         recycleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -863,7 +893,7 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
         });
         leftButtonPanel.add(recycleButton);
 
-        JButton refreshButton = new JButton("🔄 刷新");
+        JButton refreshButton = new JButton("刷新");
         refreshButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -879,7 +909,7 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
         searchField.setToolTipText("输入关键词，空格分隔");
         searchModeCombo = new JComboBox<String>(new String[]{"标题/作者", "全文检索"});
         searchModeCombo.setToolTipText("选择搜索范围");
-        searchButton = new JButton("🔍 搜索");
+        searchButton = new JButton("搜索");
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -922,7 +952,7 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
         tableSplitPane.setLeftComponent(mainTablePanel);
 
         JPanel subTablePanel = new JPanel(new BorderLayout());
-        JScrollPane subScroll = new JScrollPane(subBookTable);
+        subScroll = new JScrollPane(subBookTable);
         subScroll.setTransferHandler(new RightPanelDropTransferHandler());
         subScroll.setBorder(BorderFactory.createTitledBorder("子目录"));
         subTablePanel.add(subScroll, BorderLayout.CENTER);
@@ -953,7 +983,7 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
 
     private void initTablePopupMenu() {
         tablePopupMenu = new JPopupMenu();
-        openBookItem = new JMenuItem("📖 打开");
+        openBookItem = new JMenuItem("打开");
         openBookItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -962,7 +992,7 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
         });
         tablePopupMenu.add(openBookItem);
 
-        deleteBookItem = new JMenuItem("🗑️ 删除（移入回收站）");
+        deleteBookItem = new JMenuItem("删除（移入回收站）");
         deleteBookItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -971,7 +1001,7 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
         });
         tablePopupMenu.add(deleteBookItem);
 
-        moveBookItem = new JMenuItem("📁 移动到...");
+        moveBookItem = new JMenuItem("移动到...");
         moveBookItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -980,7 +1010,7 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
         });
         tablePopupMenu.add(moveBookItem);
 
-        translateBookItem = new JMenuItem("🌐 翻译为中文");
+        translateBookItem = new JMenuItem("翻译为中文");
         translateBookItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -1169,7 +1199,6 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
      * 注意：为了性能，不再保存到数据库（首次打开只需要显示）
      */
     private List<BookEntry> scanFolderDirectly(File folder) {
-        System.out.println("scanFolderDirectly 扫描目录: " + folder.getAbsolutePath());
         List<BookEntry> books = new ArrayList<BookEntry>();
         File[] mcFiles = folder.listFiles(new FilenameFilter() {
             @Override
@@ -1185,7 +1214,6 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
         int total = mcFiles.length;
         int processed = 0;
         for (File file : mcFiles) {
-            System.out.println("正在解析: " + file.getName());
             try {
                 BookEntry entry = parseBookEntryDirectly(file);
                 if (entry != null) {
@@ -1195,9 +1223,6 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
                 System.err.println("解析失败: " + file.getName() + " - " + e.getMessage());
             }
             processed++;
-            if (processed % 50 == 0) {
-                System.out.printf("已处理 %d/%d 个文件...\n", processed, total);
-            }
         }
         System.out.printf("扫描完成。共找到 %d 个 .mcfunction 文件，解析出 %d 本书籍。\n", total, books.size());
         // 不再保存到数据库，避免性能问题（移动操作时会由 Editlib 更新数据库）
@@ -1208,7 +1233,6 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
      * 解析单个 .mcfunction 文件为 BookEntry（复用 FunctionlibApp 的解析逻辑）
      */
     private BookEntry parseBookEntryDirectly(File file) throws IOException {
-        System.out.println("开始解析文件内容: " + file.getName());
         String content = Files.readString(file.toPath());
         String title = FunctionlibApp.extractField(content, "title");
         String author = FunctionlibApp.extractField(content, "author");
@@ -1222,7 +1246,6 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
             author = "未知";
         }
 
-        System.out.println("提取页面内容: " + file.getName());
         List<String> pagesList = McFunctionParser.extractPagesFromFile(file.toPath());
         int pages = pagesList.size();
         int wordCount = 0;
@@ -1232,7 +1255,6 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
 
         String fullContent = String.join("\n", pagesList);
         String contentHash = FunctionlibApp.computeSha256(fullContent);
-        System.out.println("完成解析: " + file.getName());
         return new FunctionlibApp.BookEntry(file.getName(), title, author, generationName, file, pages, wordCount, contentHash);
     }
 
@@ -1810,13 +1832,13 @@ private FunctionlibApp.BookEntry selectKeeperForEntry(List<FunctionlibApp.BookEn
         dialog.add(splitPane, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        JButton moveButton = new JButton("📁 移动");
-        JButton deleteButton = new JButton("🗑️ 放入回收站");
-        JButton editButton = new JButton("✏️ 修改");
-        JButton aiTranslateButton = new JButton("🤖 AI翻译");
-        JButton translateButton = new JButton("🌐 翻译");
-        JButton aiScoreButton = new JButton("📊 AI评分");
-        JButton importToMcButton = new JButton("📥 导入至 Minecraft");
+        JButton moveButton = new JButton("移动");
+        JButton deleteButton = new JButton("放入回收站");
+        JButton editButton = new JButton("修改");
+        JButton aiTranslateButton = new JButton("AI翻译");
+        JButton translateButton = new JButton("翻译");
+        JButton aiScoreButton = new JButton("AI评分");
+        JButton importToMcButton = new JButton("导入至 Minecraft");
         importToMcButton.addActionListener(e -> {
             importBookToMinecraft(book, content);
         });

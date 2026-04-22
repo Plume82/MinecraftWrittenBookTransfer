@@ -270,7 +270,6 @@ public class FunctionlibApp {
     }
 
     private static void scanFolder(File folder) {
-        System.err.println("scanFolder called for: " + folder.getAbsolutePath());
         allBooks.clear();
         booksByAuthor.clear();
         File[] mcFiles = folder.listFiles(f -> f.getName().toLowerCase().endsWith(".mcfunction"));
