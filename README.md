@@ -76,21 +76,6 @@
 
 ---
 
-## 🚀 快速开始 | Quick Start
-
 ### 环境要求 | Requirements
 - **Java 25** 或更高版本 / *Java 25 or later*
 - **Maven 3.6+**（若需手动构建） / *Maven 3.6+ (if building manually)*
-
-### 运行方式 | How to Run
-
-#### 1. 下载可执行 JAR（推荐） | Download Executable JAR (Recommended)
-从 [Releases](https://github.com/yourusername/WrittenBookTransfer/releases) 页面下载最新版本的 `WrittenBookTransfer-1.0.0.jar`，双击运行即可（Windows 下建议以管理员身份运行以保证全局热键生效）。  
-*Download the latest `WrittenBookTransfer-1.0.0.jar` from the [Releases](https://github.com/yourusername/WrittenBookTransfer/releases) page and double-click to run (on Windows, run as administrator to ensure global hotkeys work).*
-
-#### 2. 从源码构建 | Build from Source
-```bash
-git clone https://github.com/yourusername/WrittenBookTransfer.git
-cd WrittenBookTransfer
-mvn clean package
-java -jar target/WrittenBookTransfer-1.0.0.jar
