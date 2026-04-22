@@ -93,8 +93,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <!-- 注意：Main 类位于默认包（无包名），直接写类名 -->
-                                    <mainClass>Main</mainClass>
+                                    <mainClass>WrittenBookTransferGUI</mainClass>
                                 </transformer>
                             </transformers>
                             <!-- 解决 JNativeHook 的签名冲突 -->
