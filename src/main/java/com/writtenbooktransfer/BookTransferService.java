@@ -115,13 +115,10 @@ public class BookTransferService {
      * 启动传输过程（由调用方在后台线程执行）
      */
 public void startTransfer(TransferCallback callback) {
-    System.out.println("[Transfer] startTransfer 开始");
     if (pages == null || pages.isEmpty()) {
-        System.out.println("[Transfer] pages 为空，终止");
         callback.onError("没有可传输的内容");
         return;
     }
-    System.out.println("[Transfer] 页面数量: " + pages.size());
 
     callback.onStatus("准备传输，共 " + pages.size() + " 页。\n请将鼠标悬停在游戏内书本的翻页按钮上，然后按下 Ctrl 键开始...");
 
@@ -130,31 +127,22 @@ public void startTransfer(TransferCallback callback) {
 
     try {
         // 创建模拟器（可能抛出 AWTException）
-        System.out.println("[Transfer] 创建 InputSimulator...");
         simulator = new InputSimulator(offsetX, offsetY, 100);
-        System.out.println("[Transfer] InputSimulator 创建成功");
 
         // 添加监听器
         listener = new GlobalKeyListener();
         listener.addToGlobalScreen();
-        System.out.println("[Transfer] 监听器已添加");
-
         callback.onStatus("等待 Ctrl 键按下...");
-        System.out.println("[Transfer] 调用 waitForCtrl...");
         listener.waitForCtrl();
-        System.out.println("[Transfer] waitForCtrl 返回，准备开始传输");
 
         // 再次检查 pages 是否在等待期间被意外修改
         if (pages == null || pages.isEmpty()) {
-            System.out.println("[Transfer] 等待后 pages 变为空");
             callback.onError("页面数据丢失");
             return;
         }
 
         // 获取鼠标位置
-        System.out.println("[Transfer] 获取当前鼠标位置...");
         Point originalPos = simulator.getCurrentMousePosition();
-        System.out.println("[Transfer] 鼠标位置: " + originalPos);
 
         callback.onStatus("开始传输，按 ESC 可中止");
         GlobalKeyListener.clearEscapeFlag();
@@ -163,9 +151,7 @@ public void startTransfer(TransferCallback callback) {
         int countSinceResume = 0;
 
         for (int idx = 0; idx < totalPages; idx++) {
-            System.out.println("[Transfer] 开始处理第 " + (idx + 1) + " 页");
             if (GlobalKeyListener.isEscapePressed()) {
-                System.out.println("[Transfer] ESC 被按下，中止传输");
                 callback.onStatus("传输已被用户中止");
                 break;
             }
@@ -173,36 +159,29 @@ public void startTransfer(TransferCallback callback) {
             String pageText = pages.get(idx);
             callback.onPageStart(idx + 1, totalPages, pageText);
 
-            System.out.println("[Transfer] 点击输入区域...");
             simulator.clickFocusArea(originalPos);
 
             if (GlobalKeyListener.isEscapePressed()) {
-                System.out.println("[Transfer] ESC 被按下，中止传输");
                 callback.onStatus("传输已被用户中止");
                 break;
             }
 
-            System.out.println("[Transfer] 粘贴文本...");
             simulator.pasteText(pageText);
             callback.onPageComplete(idx + 1);
             countSinceResume++;
 
             if (idx < totalPages - 1) {
                 if (GlobalKeyListener.isEscapePressed()) {
-                    System.out.println("[Transfer] ESC 被按下，中止传输");
                     break;
                 }
-                System.out.println("[Transfer] 点击下一页按钮...");
                 simulator.clickNextPageButton(originalPos);
             }
 
             if (pageLimit > 0 && countSinceResume >= pageLimit && idx < totalPages - 1) {
-                System.out.println("[Transfer] 达到页数限制，暂停等待 Ctrl...");
                 callback.onStatus("已输入 " + countSinceResume + " 页（上限 " + pageLimit + "），暂停。按 Ctrl 继续，ESC 取消。");
                 listener.waitForCtrl();
                 countSinceResume = 0;
                 GlobalKeyListener.clearEscapeFlag();
-                System.out.println("[Transfer] 继续传输");
             }
         }
 
@@ -211,22 +190,17 @@ public void startTransfer(TransferCallback callback) {
         } else {
             callback.onStatus("所有内容输入完成");
         }
-        System.out.println("[Transfer] 传输循环正常结束");
 
     } catch (Exception e) {
-        System.err.println("[Transfer] 捕获异常: " + e.getMessage());
         e.printStackTrace();
         callback.onError("传输过程发生错误：" + e.getMessage());
     } finally {
-        System.out.println("[Transfer] 执行 finally 清理");
         if (listener != null) {
             listener.removeFromGlobalScreen();
-            System.out.println("[Transfer] 监听器已移除");
         }
         // 注意：不再调用 GlobalKeyListener.unregister()，保留全局钩子
         GlobalKeyListener.clearEscapeFlag();
         callback.onFinished();
-        System.out.println("[Transfer] startTransfer 结束");
     }
 }
 

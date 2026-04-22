@@ -24,7 +24,6 @@ public class GlobalKeyListener implements NativeKeyListener {
             logger.setLevel(Level.OFF);
             GlobalScreen.registerNativeHook();
             hookRegistered = true;
-            System.out.println("[GlobalKeyListener] 全局钩子初始化成功（全局唯一）");
         } catch (Exception e) {
             System.err.println("[GlobalKeyListener] 全局钩子初始化失败！请以管理员权限运行。");
             e.printStackTrace();

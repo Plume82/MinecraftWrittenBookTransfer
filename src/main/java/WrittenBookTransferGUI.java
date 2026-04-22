@@ -2184,13 +2184,10 @@ private void collectAllFolders(File folder, List<File> result, Set<String> visit
                     // 刷新主表格（仅显示根目录直属文件）
                     List<BookEntry> mainBooks = BookDao.loadAll(rootDatabaseFolder);
                      long t1 = System.currentTimeMillis();
-        System.out.println("加载主表数据耗时: " + (t1 - t0) + " ms，数量: " + mainBooks.size());
                     List<BookEntry> rootOnlyBooks = filterRootOnlyBooks(mainBooks);
                      long t2 = System.currentTimeMillis();
-        System.out.println("过滤根目录书籍耗时: " + (t2 - t1) + " ms，数量: " + rootOnlyBooks.size());
                     mainTableModel.setBooks(rootOnlyBooks);
                      long t3 = System.currentTimeMillis();
-        System.out.println("设置主表格模型耗时: " + (t3 - t2) + " ms");
                     mainBookTable.clearSelection();
                     
                     // 如果右侧子目录已打开，也刷新子表格
