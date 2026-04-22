@@ -3,8 +3,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Java Version](https://img.shields.io/badge/Java-25-orange.svg)](https://www.oracle.com/java/)
 
-> 从存档提取、智能排版到一键输入游戏，一站式管理 Minecraft 成书（Written Book）。确保已安装 [Java 25+](https://www.oracle.com/java/)，运行 `WrittenBookTransferGUI.java` 即可进入图形化界面。  
-> *From archive extraction and intelligent typesetting to one-click in-game input, an all-in-one solution for managing Minecraft written books. Ensure [Java 25+](https://www.oracle.com/java/) is installed, then run `WrittenBookTransferGUI.java` to launch the graphical interface.*
+> 从存档提取、智能排版到一键输入游戏，一站式管理 Minecraft 成书（Written Book）。确保已安装 [JDK 25+](https://www.oracle.com/java/)，运行 `WrittenBookTransferGUI.java` 即可进入图形化界面。  
+> *From archive extraction and intelligent typesetting to one-click in-game input, an all-in-one solution for managing Minecraft written books. Ensure [JDK 25+](https://www.oracle.com/java/) is installed, then run `WrittenBookTransferGUI.java` to launch the graphical interface.*
 
 **WrittenBookTransfer** 是一款面向 Minecraft 玩家和服务器管理员的综合性成书管理工具。它提供了图形化的书籍数据库管理、AI 驱动的价值过滤、智能去重、以及从存档直接提取成书并自动排版输入游戏的全流程功能。  
 *WrittenBookTransfer is a comprehensive written book management tool for Minecraft players and server administrators. It offers a graphical book database manager, AI-powered value filtering, intelligent deduplication, and an end-to-end workflow from extracting books directly from world saves to automatically typesetting and inputting them into the game.*
@@ -77,5 +77,5 @@
 ---
 
 ### 环境要求 | Requirements
-- **Java 25** 或更高版本 / *Java 25 or later*
+- **JDK 25** 或更高版本 / *JDK 25 or later*
 - **Maven 3.6+**（若需手动构建） / *Maven 3.6+ (if building manually)*
