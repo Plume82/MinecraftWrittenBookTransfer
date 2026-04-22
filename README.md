@@ -3,9 +3,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Java Version](https://img.shields.io/badge/Java-25-orange.svg)](https://www.oracle.com/java/)
 
->  **提示**：本项目**无法在仅安装 JRE（Java Runtime Environment）的环境下运行**。由于源码构建及部分动态特性依赖完整的 JDK 工具链，请务必安装 **[JDK 25 或更高版本](https://adoptium.net/temurin/releases/?version=25)**。  
->  **Important**: This project **cannot run with only a JRE (Java Runtime Environment)**. The source code build and certain runtime features require a full JDK toolchain. Please ensure you have **[JDK 25 or later](https://adoptium.net/temurin/releases/?version=25)** installed.
-
 > 从存档提取、智能排版到一键输入游戏，一站式管理 Minecraft 成书（Written Book）。确保已安装 [JDK 25+](https://adoptium.net/temurin/releases/?version=25)，运行 `WrittenBookTransferGUI.java` 即可进入图形化界面。  
 > *From archive extraction and intelligent typesetting to one-click in-game input, an all-in-one solution for managing Minecraft written books. Ensure [JDK 25+](https://adoptium.net/temurin/releases/?version=25) is installed, then run `WrittenBookTransferGUI.java` to launch the graphical interface.*
 
