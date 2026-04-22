@@ -12,8 +12,6 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 
-import org.h2.expression.analysis.Window;
-
 import java.awt.Point;
 
 /**

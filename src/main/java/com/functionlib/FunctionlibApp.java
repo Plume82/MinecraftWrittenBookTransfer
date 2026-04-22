@@ -13,7 +13,6 @@ import java.nio.file.StandardOpenOption;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.Collator;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -22,6 +21,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import java.awt.Frame;
 
 /**
  * .mcfunction 数据库处理与分类模块
@@ -716,6 +717,17 @@ private static void printFolderTree(File folder, int indent) {
     scanFolder(folder);
      batchSaveToDatabase(folder, allBooks);
     currentFolder = old;  // 恢复
+}
+public static File getRecycleBinDir() {
+    return recycleBinDir;
+}
+
+public static void openRecycleBinGUI(Frame owner, File databaseRoot, Runnable onRefresh) {
+    initRecycleBin(databaseRoot);
+    new RecycleBinDialog(owner, recycleBinDir, recycleLogFile, onRefresh);
+}
+public static File getRecycleLogFile() {
+    return recycleLogFile;
 }
 
     private static void rebuildBooksByAuthor() {

@@ -1020,32 +1020,24 @@ private void addSubfolders(DefaultMutableTreeNode parentNode, File folder) {
     }
 
     private void deleteSelectedBookFromFocusedTable() {
-        BookEntry book = getSelectedBookFromFocusedTable();
-        File folder = getCurrentFolderForFocusedTable();
-        if (book == null || folder == null) {
-            JOptionPane.showMessageDialog(this, "请先选择一本书", "提示", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "确定将《" + book.getTitle() + "》移入回收站吗？\n（其内容相同的副本也将一并移动）",
-                "确认删除", JOptionPane.YES_NO_OPTION);
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                FunctionlibApp.openFolderFromGUI(folder);
-                Editlib.deleteBookByEntry(folder, book, FunctionlibApp.getAllBooks());
-                FunctionlibApp.refreshDatabase();
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        refreshAll();
-                    }
-                });
-            }
-        }).start();
+    BookEntry book = getSelectedBookFromFocusedTable();
+    File folder = getCurrentFolderForFocusedTable();
+    if (book == null || folder == null) {
+        JOptionPane.showMessageDialog(this, "请先选择一本书", "提示", JOptionPane.WARNING_MESSAGE);
+        return;
     }
+    int confirm = JOptionPane.showConfirmDialog(this,
+            "确定将《" + book.getTitle() + "》移入回收站吗？\n（其内容相同的副本也将一并移动）",
+            "确认删除", JOptionPane.YES_NO_OPTION);
+    if (confirm != JOptionPane.YES_OPTION) return;
+
+    new Thread(() -> {
+        FunctionlibApp.openFolderFromGUI(folder);
+        Editlib.deleteBookByEntry(folder, book, FunctionlibApp.getAllBooks());
+        FunctionlibApp.refreshDatabase();
+        SwingUtilities.invokeLater(this::refreshAll);
+    }).start();
+}
 
         private void moveSelectedBookFromFocusedTable() {
     BookEntry book = getSelectedBookFromFocusedTable();
@@ -1701,24 +1693,12 @@ private FunctionlibApp.BookEntry selectKeeperForEntry(List<FunctionlibApp.BookEn
 }
 
     private void manageRecycleBin() {
-        if (rootDatabaseFolder == null) {
-            JOptionPane.showMessageDialog(this, "请先打开数据库文件夹！", "提示", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("进入回收站管理模式...");
-                FunctionlibApp.manageRecycleBinFromGUI(rootDatabaseFolder);
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        refreshAll();
-                    }
-                });
-            }
-        }).start();
+    if (rootDatabaseFolder == null) {
+        JOptionPane.showMessageDialog(this, "请先打开数据库文件夹！", "提示", JOptionPane.WARNING_MESSAGE);
+        return;
     }
+    FunctionlibApp.openRecycleBinGUI(this, rootDatabaseFolder, this::refreshAll);
+}
 
     private void openBookDetail(BookEntry book) {
         if (book == null) {

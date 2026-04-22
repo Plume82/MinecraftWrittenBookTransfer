@@ -2,7 +2,6 @@ package com.functionlib;
 
 import com.common.McFunctionParser;
 import com.functionlib.db.BookDao;
-import com.functionlib.db.DatabaseManager;
 
 import javax.swing.JFileChooser;
 import java.io.*;
@@ -602,13 +601,16 @@ public static void deleteBook(File folder, String namePattern, List<FunctionlibA
 /**
  * 删除指定书籍及其所有内容相同的副本（用于查询结果直接操作）。
  */
-public static void deleteBookByEntry(File folder, FunctionlibApp.BookEntry book, List<FunctionlibApp.BookEntry> allBooks) {
+public static void deleteBookByEntry(File currentFolder, FunctionlibApp.BookEntry book,
+                                     List<FunctionlibApp.BookEntry> allBooks) {
+    // 1. 读取目标书籍的完整内容
     String targetContent = readBookContent(book.getFile());
     if (targetContent == null) {
         System.out.println("无法读取书籍内容，取消删除。");
         return;
     }
 
+    // 2. 找出所有内容相同的副本
     List<FunctionlibApp.BookEntry> copies = new ArrayList<>();
     for (FunctionlibApp.BookEntry b : allBooks) {
         String content = readBookContent(b.getFile());
@@ -617,29 +619,25 @@ public static void deleteBookByEntry(File folder, FunctionlibApp.BookEntry book,
         }
     }
 
-    System.out.printf("找到 %d 本内容相同的副本。\n", copies.size());
-    System.out.print("确认删除吗？(y/N): ");
-    if (!CONSOLE.nextLine().trim().toLowerCase().startsWith("y")) {
-        System.out.println("取消删除。");
+    // 3. 如果没有副本，直接返回
+    if (copies.isEmpty()) {
+        System.out.println("未找到任何副本。");
         return;
     }
 
-    int deleted = 0;
-    for (FunctionlibApp.BookEntry b : copies) {
-        File f = new File(folder, b.getFileName());
-        if (FunctionlibApp.moveToRecycleBin(f)) {
-            deleted++;
-            // 数据库同步：删除记录
-            try {
-                BookDao.delete(folder, f.getAbsolutePath());
-            } catch (SQLException e) {
-                System.err.println("数据库删除失败: " + e.getMessage());
-            }
-        } else {
-            System.err.println("移动失败: " + b.getFileName());
-        }
+    // ✅ 删除以下所有命令行交互代码：
+    // System.out.println("找到 " + copies.size() + " 本内容相同的副本。");
+    // System.out.print("确认删除吗？(y/N): ");
+    // Scanner scanner = new Scanner(System.in);
+    // if (!scanner.nextLine().trim().toLowerCase().startsWith("y")) return;
+
+    // 4. 直接执行删除（移入回收站）
+    for (FunctionlibApp.BookEntry copy : copies) {
+        File file = copy.getFile();
+        FunctionlibApp.moveToRecycleBin(file);
     }
-    System.out.printf("已删除 %d 个文件。\n", deleted);
+
+    System.out.println("已将 " + copies.size() + " 个副本移入回收站。");
 }
     /**
      * 读取书籍内容并将页面合并为单个字符串。
