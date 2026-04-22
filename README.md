@@ -1,8 +1,8 @@
 # WrittenBookTransfer —— Minecraft 成书全流程工具链
 
-[![Java Version](https://img.shields.io/badge/Java-25-orange.svg)](https://www.oracle.com/java/)
 
-> 📚 从存档提取、智能排版到一键输入游戏，一站式管理 Minecraft 成书（Written Book）。确保已安装 Java 25，打开WrittenBookTransferGUI.java即可进入图形化界面。
+
+> 📚 从存档提取、智能排版到一键输入游戏，一站式管理 Minecraft 成书（Written Book）。确保已安装 [![Java Version](https://img.shields.io/badge/Java-25-orange.svg)](https://www.oracle.com/java/)，打开WrittenBookTransferGUI.java即可进入图形化界面。
 
 **WrittenBookTransfer** 是一款面向 Minecraft 玩家和服务器管理员的综合性成书管理工具。它提供了图形化的书籍数据库管理、AI 驱动的价值过滤、智能去重、以及从存档直接提取成书并自动排版输入游戏的全流程功能。
 
